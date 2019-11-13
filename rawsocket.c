@@ -29,6 +29,7 @@ struct sockaddr_in source, dest;
 
 int packet_handler(void);
 
+// Crtl+c 누르면 동작하는 시그널 핸들러.
 void destroy_handler(void){
 	printf("\n=====Pcap End=====\n");
 
@@ -84,7 +85,7 @@ int packet_handler(){
 	struct sockaddr saddr;
 	int saddr_len = sizeof(saddr);
 	unsigned short iphdrlen;
-	int protocol = 0;
+	int protocol = 0, source_port = 0, dest_port = 0;
 	unsigned char *buffer = (unsigned char*) malloc(BUFFER_SIZE); // receive data
 	unsigned char protocol_name[10];
 	int packet_len = 0;
@@ -115,16 +116,24 @@ int packet_handler(){
 		struct tcphdr *tcp = (struct tcphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		strcpy(protocol_name,"TCP");
 		log_tcp(tcp);
-
+		source_port = ntohs(tcp->source);
+		dest_port = ntohs(tcp->dest);
 	}else if(protocol == UDP){
 		struct udphdr *udp = (struct udphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		strcpy(protocol_name,"UDP");
 		log_udp(udp);
+		source_port = ntohs(udp->source);
+		dest_port = ntohs(udp->dest);
 	}
 	else{
 		sprintf(protocol_name, "%d", protocol);
 	}
-	
+
+	if(DNS == source_port || DNS == dest_port)
+		strcpy(protocol_name,"DNS");
+	else if(HTTP == source_port || HTTP == dest_port)
+		strcpy(protocol_name,"HTTP");
+
 	printf("Num %d\t", packet_num);
 	printf("Source %s\t", inet_ntoa(source.sin_addr));
 	printf("Dest %s\t", inet_ntoa(dest.sin_addr));
