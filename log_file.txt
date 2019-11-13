@@ -1,0 +1,756 @@
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :86 Bytes 
+ -Identification :11396 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :61829 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.85.231.26 
+===== TCP =====
+ -Source Port : 40970 
+ -Destination Port : 443 
+ -Sequence Number : ef0fbb0f 
+ -Acknowldge Number : 517ede29 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28320 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :44951 
+ -Source IP :52.85.231.26 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 40970 
+ -Sequence Number : 517ede29 
+ -Acknowldge Number : 1d10bb0f 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :86 Bytes 
+ -Identification :28321 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :44904 
+ -Source IP :52.85.231.26 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 40970 
+ -Sequence Number : 517ede29 
+ -Acknowldge Number : 1d10bb0f 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :11397 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :61874 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.85.231.26 
+===== TCP =====
+ -Source Port : 40970 
+ -Destination Port : 443 
+ -Sequence Number : 1d10bb0f 
+ -Acknowldge Number : 7f7ede29 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :10622 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :18445 
+ -Source IP :192.168.64.128 
+ -Destination IP :172.217.27.67 
+===== TCP =====
+ -Source Port : 58868 
+ -Destination Port : 80 
+ -Sequence Number : 730dc63f 
+ -Acknowldge Number : 15aa78 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28322 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :745 
+ -Source IP :172.217.27.67 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 80 
+ -Destination Port : 58868 
+ -Sequence Number : 15aa78 
+ -Acknowldge Number : 740dc63f 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28323 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :744 
+ -Source IP :172.217.27.67 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 80 
+ -Destination Port : 58868 
+ -Sequence Number : 15aa78 
+ -Acknowldge Number : 740dc63f 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :0 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :29067 
+ -Source IP :192.168.64.128 
+ -Destination IP :172.217.27.67 
+===== TCP =====
+ -Source Port : 58868 
+ -Destination Port : 80 
+ -Sequence Number : 740dc63f 
+ -Acknowldge Number : 115aa78 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :71 Bytes 
+ -Identification :28324 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40699 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42778 
+ -Sequence Number : 75ef77e 
+ -Acknowldge Number : 8968148f 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :5049 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :64005 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42778 
+ -Destination Port : 443 
+ -Sequence Number : 8968148f 
+ -Acknowldge Number : 265ef77e 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :71 Bytes 
+ -Identification :5050 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :63973 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42778 
+ -Destination Port : 443 
+ -Sequence Number : 8968148f 
+ -Acknowldge Number : 265ef77e 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :5051 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :64003 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42778 
+ -Destination Port : 443 
+ -Sequence Number : a868148f 
+ -Acknowldge Number : 265ef77e 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28325 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40729 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42778 
+ -Sequence Number : 265ef77e 
+ -Acknowldge Number : a868148f 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28326 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40728 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42778 
+ -Sequence Number : 265ef77e 
+ -Acknowldge Number : a968148f 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :71 Bytes 
+ -Identification :28327 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40696 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42776 
+ -Sequence Number : eb46b25d 
+ -Acknowldge Number : 9596e97a 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :8441 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :60613 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42776 
+ -Destination Port : 443 
+ -Sequence Number : 9596e97a 
+ -Acknowldge Number : a47b25d 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :71 Bytes 
+ -Identification :8442 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :60581 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42776 
+ -Destination Port : 443 
+ -Sequence Number : 9596e97a 
+ -Acknowldge Number : a47b25d 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :8443 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :60611 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42776 
+ -Destination Port : 443 
+ -Sequence Number : b496e97a 
+ -Acknowldge Number : a47b25d 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28328 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40726 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42776 
+ -Sequence Number : a47b25d 
+ -Acknowldge Number : b496e97a 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28329 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40725 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42776 
+ -Sequence Number : a47b25d 
+ -Acknowldge Number : b596e97a 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :71 Bytes 
+ -Identification :28330 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40693 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42780 
+ -Sequence Number : 8585fe34 
+ -Acknowldge Number : c8af01fb 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :64837 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :4217 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42780 
+ -Destination Port : 443 
+ -Sequence Number : c8af01fb 
+ -Acknowldge Number : a485fe34 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :71 Bytes 
+ -Identification :64838 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :4185 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42780 
+ -Destination Port : 443 
+ -Sequence Number : c8af01fb 
+ -Acknowldge Number : a485fe34 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :64839 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :4215 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42780 
+ -Destination Port : 443 
+ -Sequence Number : e7af01fb 
+ -Acknowldge Number : a485fe34 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28331 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40723 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42780 
+ -Sequence Number : a485fe34 
+ -Acknowldge Number : e7af01fb 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28332 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40722 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42780 
+ -Sequence Number : a485fe34 
+ -Acknowldge Number : e8af01fb 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28333 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40721 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42778 
+ -Sequence Number : 265ef77e 
+ -Acknowldge Number : a968148f 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :0 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :3519 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42778 
+ -Destination Port : 443 
+ -Sequence Number : a968148f 
+ -Acknowldge Number : 275ef77e 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28334 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40720 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42776 
+ -Sequence Number : a47b25d 
+ -Acknowldge Number : b596e97a 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :0 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :3519 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42776 
+ -Destination Port : 443 
+ -Sequence Number : b596e97a 
+ -Acknowldge Number : b47b25d 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28335 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :40719 
+ -Source IP :52.89.247.143 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 42780 
+ -Sequence Number : a485fe34 
+ -Acknowldge Number : e8af01fb 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :0 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :3519 
+ -Source IP :192.168.64.128 
+ -Destination IP :52.89.247.143 
+===== TCP =====
+ -Source Port : 42780 
+ -Destination Port : 443 
+ -Sequence Number : e8af01fb 
+ -Acknowldge Number : a585fe34 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :52680 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :61427 
+ -Source IP :192.168.64.128 
+ -Destination IP :151.101.228.133 
+===== TCP =====
+ -Source Port : 33912 
+ -Destination Port : 443 
+ -Sequence Number : f0ebd144 
+ -Acknowldge Number : fb190b2b 
+
+===== Ethernet Header =====
+Source Address 00 0C 29 F6 13 16 
+Destination Address :00 50 56 E6 42 91 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :43923 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :4649 
+ -Source IP :192.168.64.128 
+ -Destination IP :151.101.228.133 
+===== TCP =====
+ -Source Port : 33916 
+ -Destination Port : 443 
+ -Sequence Number : e92ca31 
+ -Acknowldge Number : 926efb3b 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28336 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :20236 
+ -Source IP :151.101.228.133 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 33912 
+ -Sequence Number : fb190b2b 
+ -Acknowldge Number : f1ebd144 
+
+===== Ethernet Header =====
+Source Address 00 50 56 E6 42 91 
+Destination Address :00 0C 29 F6 13 16 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :40 Bytes 
+ -Identification :28337 
+ -Time To Live :128 
+ -Protocol :6 
+ -Header Checksum :20235 
+ -Source IP :151.101.228.133 
+ -Destination IP :192.168.64.128 
+===== TCP =====
+ -Source Port : 443 
+ -Destination Port : 33916 
+ -Sequence Number : 926efb3b 
+ -Acknowldge Number : f92ca31 

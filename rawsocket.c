@@ -17,15 +17,25 @@
 #define ICMP 1
 #define TCP 6
 #define UDP 17
+#define DNS 53
+#define HTTP 80
 
 
 
 int rawsocket;
 int packet_num = 0;
 FILE *log_file;
+struct sockaddr_in source, dest;
 
+int packet_handler(void);
 
-void packet_handler(void);
+void destroy_handler(void){
+	printf("\n=====Pcap End=====\n");
+
+	fclose(log_file);
+	close(rawsocket);
+}
+
 void log_eth(struct ethhdr *eth);
 void log_ip(struct iphdr *ip);
 void log_tcp(struct tcphdr *tcp);
@@ -51,81 +61,96 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-//	signal(SIGALRM, packet_handler);
-//	alarm(2);
-	act.sa_handler=packet_handler;
+	act.sa_handler=destroy_handler;
 	sigemptyset(&act.sa_mask);
 	act.sa_flags=0;
-	sigaction(SIGALRM, &act, 0);
+	sigaction(SIGINT, &act, 0);
 
-	alarm(2);
+	 
+	while(packet_handler()){
+	
+	}
 
-	// end
-	fclose(log_file);
-	close(rawsocket);
+	//로그파일검사
+
+
+
+	return 0;
 }
 
 
-// timeout
-void packet_handler(){
+int packet_handler(){
 
 	struct sockaddr saddr;
 	int saddr_len = sizeof(saddr);
 	unsigned short iphdrlen;
 	int protocol = 0;
-	unsigned char *buffer = (unsigned char*) malloc(65536); // receive data
+	unsigned char *buffer = (unsigned char*) malloc(BUFFER_SIZE); // receive data
+	unsigned char protocol_name[10];
+	int packet_len = 0;
 
 	memset(buffer, 0, BUFFER_SIZE);
 
 	int buflen=recvfrom(rawsocket, buffer, 65536, 0, &saddr, (socklen_t *)&saddr_len);
+
 	if(buflen <0){
 		printf("error in reading recvfrom \n");
-		exit(1);
+		return 0;
 	}
 
 	// L2 link Layer
 	struct ethhdr *eth = (struct ethhdr *)(buffer);
-	eth_log(eth);
+	log_eth(eth);
 	
 	// L3 Network Layer
 	struct iphdr *ip = (struct iphdr*)(buffer + sizeof(struct ethhdr));
 	iphdrlen = ip->ihl * 4; 
-	ip_log(ip);
+	log_ip(ip);
 
 	protocol = (unsigned int)ip->protocol;
 	
 
 	// L4 Transport Layer
 	if(protocol == TCP){
-		printf("protocol : TCP \n");
 		struct tcphdr *tcp = (struct tcphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
-		tcp_log(tcp);
+		strcpy(protocol_name,"TCP");
+		log_tcp(tcp);
 
 	}else if(protocol == UDP){
-		printf("protocol : UDP \n");
 		struct udphdr *udp = (struct udphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
-		udp_log(udp);
-
-	}else{
-		printf("protocol : %d \n", protocol);
+		strcpy(protocol_name,"UDP");
+		log_udp(udp);
+	}
+	else{
+		sprintf(protocol_name, "%d", protocol);
 	}
 	
-	printf("Num %d|Time %d|Source %s|Destination %s|Protocol %d|Length %d ",
-			packet_num, 0, "source ip","dest ip", protocol, sizeof(buffer));
-			
+	printf("Num %d\t", packet_num);
+	printf("Source %s\t", inet_ntoa(source.sin_addr));
+	printf("Dest %s\t", inet_ntoa(dest.sin_addr));
+	printf("Protocol %s\t \n", protocol_name);
+
+	packet_num++;
+
+	free(buffer);
+	return 1;
 }
+
+
 
 void log_eth(struct ethhdr *eth){
 
 	fprintf(log_file,"\n===== Ethernet Header =====\n");
-	fprintf(log_file,"Source Address %.2X %.2X %.2X %.2X %.2X %.2X \n", eth->h_source[0], eth->h_source[1], eth->h_source[2], eth->h_source[3], eth->h_source[4], eth->h_source[5]);
-	fprintf(log_file,"Destination Address :%.2X %.2X %.2X %.2X %.2X %.2X \n", eth->h_dest[0], eth->h_dest[1],eth->h_dest[2], eth->h_dest[3], eth->h_dest[4], eth->h_dest[5]);
-
+	fprintf(log_file,"Source Address %.2X %.2X %.2X %.2X %.2X %.2X \n", 
+			eth->h_source[0], eth->h_source[1], eth->h_source[2], eth->h_source[3],
+			eth->h_source[4], eth->h_source[5]);
+	fprintf(log_file,"Destination Address :%.2X %.2X %.2X %.2X %.2X %.2X \n",
+			eth->h_dest[0], eth->h_dest[1],eth->h_dest[2], eth->h_dest[3],
+			eth->h_dest[4], eth->h_dest[5]);
 
 }
 
 void log_ip(struct iphdr *ip){
-	struct sockaddr_in source, dest;
 
 	memset(&source, 0, sizeof(source));
 	source.sin_addr.s_addr = ip->saddr;
@@ -146,18 +171,19 @@ void log_ip(struct iphdr *ip){
 }
 
 void log_tcp(struct tcphdr *tcp){
-		fprintf(log_file,"===== TCP =====\n");
-		fprintf(log_file, " -Source Port : %d \n", ntohs(tcp->source));
-		fprintf(log_file," -Destination Port : %d \n", ntohs(tcp->dest));
-		fprintf(log_file," -Sequence Number : %x \n", tcp->seq);
-		fprintf(log_file," -Acknowldge Number : %x \n", tcp->ack_seq);}
+	fprintf(log_file,"===== TCP =====\n");
+	fprintf(log_file, " -Source Port : %d \n", ntohs(tcp->source));
+	fprintf(log_file," -Destination Port : %d \n", ntohs(tcp->dest));
+	fprintf(log_file," -Sequence Number : %x \n", tcp->seq);
+	fprintf(log_file," -Acknowldge Number : %x \n", tcp->ack_seq);
+}
 
 void log_udp(struct udphdr *udp){
-		fprintf(log_file,"===== UDP =====\n");
-		fprintf(log_file, " -Source Port : %d \n", ntohs(udp->source));
-		fprintf(log_file," -Destination Port : %d \n", ntohs(udp->dest));
-		fprintf(log_file," -UDP Length : %d \n", ntohs(udp->len));
-		fprintf(log_file," -Checksum  : %d \n", ntohs(udp->check));
+	fprintf(log_file,"===== UDP =====\n");
+	fprintf(log_file, " -Source Port : %d \n", ntohs(udp->source));
+	fprintf(log_file," -Destination Port : %d \n", ntohs(udp->dest));
+	fprintf(log_file," -UDP Length : %d \n", ntohs(udp->len));
+	fprintf(log_file," -Checksum  : %d \n", ntohs(udp->check));
 }
 
 void log_data(unsigned char *data, int remaining_data){	
@@ -174,12 +200,13 @@ void print_eth(struct ethhdr *eth){
 	printf("=====Ethernet Header===== \n");
 
 	// Ethernet 6byte address
-	printf("Source Address %.2X %.2X %.2X %.2X %.2X %.2X \n", eth->h_source[0], eth->h_source[1], eth->h_source[2], eth->h_source[3], eth->h_source[4], eth->h_source[5]);
-	printf("Destination Address :%.2X %.2X %.2X %.2X %.2X %.2X \n", eth->h_dest[0], eth->h_dest[1],eth->h_dest[2], eth->h_dest[3], eth->h_dest[4], eth->h_dest[5]);
+	printf("Source Address %.2X %.2X %.2X %.2X %.2X %.2X \n",
+			eth->h_source[0], eth->h_source[1], eth->h_source[2], 
+			eth->h_source[3], eth->h_source[4], eth->h_source[5]);
+	printf("Destination Address :%.2X %.2X %.2X %.2X %.2X %.2X \n", 
+			eth->h_dest[0], eth->h_dest[1], eth->h_dest[2],
+			eth->h_dest[3], eth->h_dest[4], eth->h_dest[5]);
 	printf("Protocol :%x \n", eth->h_proto); // next layer information
 
 }
-
-
-
 
