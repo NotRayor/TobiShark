@@ -44,37 +44,35 @@ void log_udp(struct udphdr *udp);
 void log_data(unsigned char *data, int remaining_data);
 
 void print_eth(struct ethhdr *eth);
-
+void print_menu();
 
 int main(int argc, char *argv[])
 {
 	log_file = fopen("log_file.txt", "w");
-	int input;
+	int input, end_flag = 0;
 	socklen_t len;
 
 	struct sigaction act;
 
+	while(!end_flag){
 
-	rawsocket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-	if(rawsocket<0)
-	{
-		printf("error in socket \n");
-		return -1;
-	}
+		print_menu();
 
-	act.sa_handler=destroy_handler;
-	sigemptyset(&act.sa_mask);
-	act.sa_flags=0;
-	sigaction(SIGINT, &act, 0);
+		printf("\ninput : ");
+		scanf("%d", &input);
+
+		act.sa_handler=destroy_handler;
+		sigemptyset(&act.sa_mask);
+		act.sa_flags=0;
+		sigaction(SIGINT, &act, 0);
 
 	 
-	while(packet_handler()){
-	
-	}
+		while(packet_handler()){
+		
+		}
 
 	//로그파일검사
-
-
+	}
 
 	return 0;
 }
@@ -89,6 +87,13 @@ int packet_handler(){
 	unsigned char *buffer = (unsigned char*) malloc(BUFFER_SIZE); // receive data
 	unsigned char protocol_name[10];
 	int packet_len = 0;
+
+	rawsocket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+	if(rawsocket<0)
+	{
+		printf("error in socket \n");
+		return -1;
+	}
 
 	memset(buffer, 0, BUFFER_SIZE);
 
@@ -219,3 +224,10 @@ void print_eth(struct ethhdr *eth){
 
 }
 
+void print_menu(){
+	printf("\n=====Program Menu=====\n");
+	printf("1.Capture Start \n");
+	printf("2.List View \n");
+	printf("3.Packet Analyze \n");	
+	printf("4.exit \n");
+}
