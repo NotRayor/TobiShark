@@ -20,17 +20,17 @@
 #define DNS 53
 #define HTTP 80
 
-
-
 int rawsocket;
 int packet_num = 0;
 FILE *log_file;
 struct sockaddr_in source, dest;
+struct sigaction act;
 
 int packet_handler(void);
 
+
 // Crtl+c 누르면 동작하는 시그널 핸들러.
-void destroy_handler(void){
+void close_handler(void){
 	printf("\n=====Pcap End=====\n");
 
 	fclose(log_file);
@@ -46,32 +46,36 @@ void log_data(unsigned char *data, int remaining_data);
 void print_eth(struct ethhdr *eth);
 void print_menu();
 
+
+
 int main(int argc, char *argv[])
 {
 	log_file = fopen("log_file.txt", "w");
 	int input, end_flag = 0;
 	socklen_t len;
 
-	struct sigaction act;
-
 	while(!end_flag){
 
 		print_menu();
-
 		printf("\ninput : ");
 		scanf("%d", &input);
-
-		act.sa_handler=destroy_handler;
-		sigemptyset(&act.sa_mask);
-		act.sa_flags=0;
-		sigaction(SIGINT, &act, 0);
-
-	 
-		while(packet_handler()){
-		
+	
+		switch(input){
+			case 1:
+				while(packet_handler()){}
+				break;
+			case 2:
+				break;
+			case 3:
+				break;
+			case 4:
+				exit(1);
+				break;
+			default:
+				printf("Check your input\n");
+				break;
 		}
 
-	//로그파일검사
 	}
 
 	return 0;
@@ -88,10 +92,15 @@ int packet_handler(){
 	unsigned char protocol_name[10];
 	int packet_len = 0;
 
+	act.sa_handler=close_handler;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags=0;
+	sigaction(SIGINT, &act, 0);
+
 	rawsocket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 	if(rawsocket<0)
 	{
-		printf("error in socket \n");
+		printf("pcap end \n");
 		return -1;
 	}
 
