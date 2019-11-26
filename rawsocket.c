@@ -31,11 +31,13 @@ int rawsocket;
 int packet_num = 0;
 FILE *log_file;
 FILE *log_file_dir;
+char filter[80];
 struct sockaddr_in source, dest;
 struct sigaction act;
 
 int packet_handler(void);
-
+int packet_analyze(void);
+int packet_list();
 
 // Crtl+c 누르면 동작하는 시그널 핸들러.
 void close_handler(void){
@@ -51,10 +53,12 @@ void log_tcp(struct tcphdr *tcp);
 void log_udp(struct udphdr *udp);
 void log_data(unsigned char *data, int remaining_data);
 
+// 문자열 관련 함수
 void print_eth(struct ethhdr *eth);
 void print_menu();
+void tokenizer(char str[1024]);
 
-//추가된 함수
+// 디렉터리 / 파일 관련 함수
 void make_logdir();
 void delete_logdir();
 void get_logdir();
@@ -79,6 +83,9 @@ int main(int argc, char *argv[])
 			case 2:
 				break;
 			case 3:
+				printf("\nfilter input : ");
+				scanf("%s", filter);
+				packet_list();
 				break;
 			case 4:
 				delete_logdir();
@@ -264,7 +271,6 @@ int packet_handler(){
 	}
 	fclose(log_file);
 	get_logdir();
-	//
 
 	printf("Num %d\t", packet_num);
 	printf("Source %s\t", inet_ntoa(source.sin_addr));
@@ -277,6 +283,53 @@ int packet_handler(){
 	return 1;
 }
 
+
+int packet_analyze(void){
+	
+}
+
+int packet_list()
+{
+	printf("동작시작");
+
+	DIR *dir_ptr = NULL;
+	char path[] = {"./logdir"};
+	char filename[1024];
+	struct stat buf;
+	struct dirent *file = NULL;
+
+
+	/*목록 읽을 디렉터리 명을 DIR로 리턴 */
+	if((dir_ptr = opendir(path)) == NULL){
+		return unlink(path);
+	}
+
+
+	/*처음부터 파일, 디렉터리 명을 한개씩 읽는다. */
+	while((file = readdir(dir_ptr))!=NULL){
+		
+		if(strcmp(file->d_name,".")==0 || strcmp(file->d_name,"..")==0){
+			continue;
+		}
+
+		//filename ./path
+		sprintf(filename, "%s/%s", path, file->d_name);
+
+		//lstat 링크 파일 자체 정보를 받아온다. 
+		//파일 속성을 얻어 buf에 저장,
+		if(lstat(filename,&buf)==-1){
+			continue;
+		}
+
+		//S_ISREG 일반파일 S_ISLNK 심볼릭 링크
+		else if(S_ISREG(buf.st_mode) || S_ISLNK(buf.st_mode)){
+			printf("파일이름  %s \n", file->d_name);
+			tokenizer(file->d_name);
+		}
+	}
+	closedir(dir_ptr);
+	return 0;
+}
 
 
 void log_eth(struct ethhdr *eth){
@@ -357,4 +410,13 @@ void print_menu(){
 	printf("2.List View \n");
 	printf("3.Packet Analyze \n");	
 	printf("4.exit \n");
+}
+
+void tokenizer(char str[1024]){
+	char *ptr = strtok(str, "_");
+
+	while(ptr != NULL){
+		printf("%s \n", ptr);
+		ptr = strtok(NULL, "_");
+	}
 }
