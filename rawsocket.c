@@ -15,7 +15,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-//
+//시스템 관련 헤더
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define BUFFER_SIZE 65536
 
@@ -54,7 +56,9 @@ void print_menu();
 
 //추가된 함수
 void make_logdir();
+void delete_logdir();
 void get_logdir();
+int rmdirs(const char *path, int force);
 
 
 int main(int argc, char *argv[])
@@ -77,6 +81,7 @@ int main(int argc, char *argv[])
 			case 3:
 				break;
 			case 4:
+				delete_logdir();
 				exit(1);
 				break;
 			default:
@@ -96,6 +101,68 @@ void make_logdir()
 	mkdir(path, 0755);
 }
 
+//디렉터리 삭제 함수
+void delete_logdir()
+{
+	char path[] = {"./logdir"};
+	int result = rmdirs(path, 1);
+
+	if(result == -1){
+		printf("delete_logdir Error\n");
+	}
+}
+
+
+int rmdirs(const char *path, int force)
+{
+	DIR * dir_ptr = NULL;
+	struct dirent *file = NULL;
+	struct stat buf;//파일의 상태 정보를 저장하는 buf 구조체
+	char filename[1024];
+
+	/*목록 읽을 디렉터리 명을 DIR로 리턴 */
+	if((dir_ptr = opendir(path)) == NULL){
+		return unlink(path);
+	}
+
+	/*처음부터 파일, 디렉터리 명을 한개씩 읽는다. */
+	while((file = readdir(dir_ptr))!=NULL){
+		//readdir 파일명 중, 현재 디렉터리 나타내는 . 도 포함되어 있다.
+		// . or ..을 확인해서, 동일할 시 continue로 넘겨서 무한루프를 막는다.
+		if(strcmp(file->d_name,".")==0 || strcmp(file->d_name,"..")==0){
+			continue;
+		}
+
+		//filename ./path
+		sprintf(filename, "%s/%s", path, file->d_name);
+
+		//lstat 링크 파일 자체 정보를 받아온다. 
+		//파일 속성을 얻어 buf에 저장,
+		if(lstat(filename,&buf)==-1){
+			continue;
+		}
+
+		//  S_ISDIR 디렉터리 판별
+		if(S_ISDIR(buf.st_mode)){
+			// 검색된 파일이 디렉터리면 재귀호출로 하위 디렉터리 검색
+			if(rmdirs(filename, force) == -1 && !force){
+				return -1;
+			}
+		}
+			//S_ISREG 일반파일 S_ISLNK 심볼릭 링크
+		else if(S_ISREG(buf.st_mode) || S_ISLNK(buf.st_mode)){
+			if(unlink(filename)==-1&&!force){
+				return -1;
+			}
+			printf("파일삭제 %s \n", file->d_name);
+		}
+	}
+
+	closedir(dir_ptr);
+	return rmdir(path);
+}
+
+
 //ls 함수 대용
 void get_logdir()
 {
@@ -110,6 +177,7 @@ void get_logdir()
  
     	while((de = readdir(dir))!=NULL)
     	{
+			// 파일 이름 저장
         	fprintf(log_file_dir, "%s\n",de->d_name);
     	}
     	closedir(dir);
