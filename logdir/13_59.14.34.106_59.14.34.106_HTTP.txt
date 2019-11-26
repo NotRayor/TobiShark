@@ -1,0 +1,21 @@
+
+===== Ethernet Header =====
+Source Address A0 51 0B 5D AE 0D 
+Destination Address :48 2C A0 90 AF CB 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :541 Bytes 
+ -Identification :19150 
+ -Time To Live :64 
+ -Protocol :6 
+ -Header Checksum :42133 
+ -Source IP :192.168.43.87 
+ -Destination IP :59.14.34.106 
+===== TCP =====
+ -Source Port : 50750 
+ -Destination Port : 80 
+ -Sequence Number : af409318 
+ -Acknowldge Number : ffa36d34 

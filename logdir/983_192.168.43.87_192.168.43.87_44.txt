@@ -1,0 +1,16 @@
+
+===== Ethernet Header =====
+Source Address 48 2C A0 90 AF CB 
+Destination Address :A0 51 0B 5D AE 0D 
+
+===== IP Header =====
+ -Version :0 
+ -Internet Header Length(IHL) : 0 bits 
+ -Type Of Service :1 
+ -Total Length :2048 Bytes 
+ -Identification :1540 
+ -Time To Live :72 
+ -Protocol :44 
+ -Header Checksum :41104 
+ -Source IP :175.203.192.168 
+ -Destination IP :43.1.0.0 

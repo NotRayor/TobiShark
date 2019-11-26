@@ -1,0 +1,21 @@
+
+===== Ethernet Header =====
+Source Address 48 2C A0 90 AF CB 
+Destination Address :A0 51 0B 5D AE 0D 
+
+===== IP Header =====
+ -Version :4 
+ -Internet Header Length(IHL) : 20 bits 
+ -Type Of Service :0 
+ -Total Length :318 Bytes 
+ -Identification :55426 
+ -Time To Live :64 
+ -Protocol :17 
+ -Header Checksum :35203 
+ -Source IP :192.168.43.1 
+ -Destination IP :192.168.43.87 
+===== UDP =====
+ -Source Port : 53 
+ -Destination Port : 34874 
+ -UDP Length : 298 
+ -Checksum  : 27484 

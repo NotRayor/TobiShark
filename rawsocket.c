@@ -11,6 +11,11 @@
 #include <memory.h>
 #include <fcntl.h>
 #include <signal.h>
+//디렉토리 생성 라이브러리
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+//
 
 #define BUFFER_SIZE 65536
 
@@ -23,6 +28,7 @@
 int rawsocket;
 int packet_num = 0;
 FILE *log_file;
+FILE *log_file_dir;
 struct sockaddr_in source, dest;
 struct sigaction act;
 
@@ -46,11 +52,13 @@ void log_data(unsigned char *data, int remaining_data);
 void print_eth(struct ethhdr *eth);
 void print_menu();
 
+//추가된 함수
+void make_logdir();
+void get_logdir();
 
 
 int main(int argc, char *argv[])
 {
-	log_file = fopen("log_file.txt", "w");
 	int input, end_flag = 0;
 	socklen_t len;
 
@@ -81,6 +89,32 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+//디렉토리 생성 함수
+void make_logdir()
+{
+	char path[] = {"./logdir"};
+	mkdir(path, 0755);
+}
+
+//ls 함수 대용
+void get_logdir()
+{
+	log_file_dir = fopen("logdir_list.txt", "w");
+    	DIR *dir = opendir("logdir");
+    	if(dir == NULL)
+    	{
+        	printf("failed open\n");
+    	}
+ 
+    	struct dirent *de=NULL;
+ 
+    	while((de = readdir(dir))!=NULL)
+    	{
+        	fprintf(log_file_dir, "%s\n",de->d_name);
+    	}
+    	closedir(dir);
+	fclose(log_file_dir);
+} 
 
 int packet_handler(){
 
@@ -115,12 +149,11 @@ int packet_handler(){
 
 	// L2 link Layer
 	struct ethhdr *eth = (struct ethhdr *)(buffer);
-	log_eth(eth);
+	
 	
 	// L3 Network Layer
 	struct iphdr *ip = (struct iphdr*)(buffer + sizeof(struct ethhdr));
 	iphdrlen = ip->ihl * 4; 
-	log_ip(ip);
 
 	protocol = (unsigned int)ip->protocol;
 	
@@ -129,13 +162,11 @@ int packet_handler(){
 	if(protocol == TCP){
 		struct tcphdr *tcp = (struct tcphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		strcpy(protocol_name,"TCP");
-		log_tcp(tcp);
 		source_port = ntohs(tcp->source);
 		dest_port = ntohs(tcp->dest);
 	}else if(protocol == UDP){
 		struct udphdr *udp = (struct udphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		strcpy(protocol_name,"UDP");
-		log_udp(udp);
 		source_port = ntohs(udp->source);
 		dest_port = ntohs(udp->dest);
 	}
@@ -147,6 +178,25 @@ int packet_handler(){
 		strcpy(protocol_name,"DNS");
 	else if(HTTP == source_port || HTTP == dest_port)
 		strcpy(protocol_name,"HTTP");
+
+	//packet_handler 변경 점	
+	make_logdir();
+	char filename[500];
+	sprintf(filename, "./logdir/%d_%s_%s_%s.txt", packet_num, inet_ntoa(source.sin_addr), inet_ntoa(dest.sin_addr), protocol_name);
+	log_file = fopen(&filename, "w");
+	log_eth(eth);
+	log_ip(ip);
+	if(protocol == TCP){
+		struct tcphdr *tcp = (struct tcphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
+		log_tcp(tcp);
+	}
+	else if(protocol == UDP){
+		struct udphdr *udp = (struct udphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
+		log_udp(udp);
+	}
+	fclose(log_file);
+	get_logdir();
+	//
 
 	printf("Num %d\t", packet_num);
 	printf("Source %s\t", inet_ntoa(source.sin_addr));
