@@ -11,6 +11,7 @@
 #include <memory.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <time.h>
 //디렉토리 생성 라이브러리
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -20,12 +21,14 @@
 #include <sys/stat.h>
 
 #define BUFFER_SIZE 65536
+#define PATH_MAX 512
 
 #define ICMP 1
 #define TCP 6
 #define UDP 17
 #define DNS 53
 #define HTTP 80
+
 
 int rawsocket;
 int packet_num = 0;
@@ -36,7 +39,7 @@ struct sockaddr_in source, dest;
 struct sigaction act;
 
 int packet_handler(void);
-int packet_analyze(void);
+int packet_analyze(char *filter);
 int packet_list();
 
 // Crtl+c 누르면 동작하는 시그널 핸들러.
@@ -64,6 +67,35 @@ void delete_logdir();
 void get_logdir();
 int rmdirs(const char *path, int force);
 
+// 정렬 함수, -1이면 앞에, 1이면 뒤로 배치하면서 출력할 것이다.
+int datesort(const struct dirent** file1, const struct dirent** file2){
+	struct stat info1, info2;
+	int rval;
+	char path1[PATH_MAX], path2[PATH_MAX];
+
+	rval = stat("./log_dir", &info1);
+	// -1 오류 발생
+	if(rval){
+		printf("stat error\n");
+		return 0;
+	}
+
+	rval = stat("./log_dir", &info2);
+	if(rval){
+		printf("stat error\n");
+		return 0;
+	}
+
+	/* stat.mtime 마지막으로 수정된 시간*/
+	return info1.st_mtime < info2.st_mtime;
+}
+
+int file_select(const struct dirent *entry)
+{
+	//http는 예제, 동작이 확인되면, 변경할 예정이다.
+	return strcmp(entry->d_name, "http");
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -81,6 +113,7 @@ int main(int argc, char *argv[])
 				while(packet_handler()){}
 				break;
 			case 2:
+				packet_analyze("http");
 				break;
 			case 3:
 				printf("\nfilter input : ");
@@ -284,8 +317,29 @@ int packet_handler(){
 }
 
 
-int packet_analyze(void){
-	
+int packet_analyze(char *filter){
+	struct dirent **namelist;
+	int count;
+	int idx;
+	const char *path = "./log_dir";
+
+	if((count = scandir(path, &namelist, datesort, file_select)) == -1){
+		fprintf(stderr, "%s direntory scan error\n", path);
+	}
+
+	for(idx = 0; idx < count; idx++){
+		//파일의 이름 테스트
+		printf("%s\n", namelist[idx]->d_name);
+	}
+
+	for(idx = 0; idx < count; idx++){
+		free(namelist[idx]);
+	}
+
+	free(namelist);
+
+	return 0;
+
 }
 
 int packet_list()
