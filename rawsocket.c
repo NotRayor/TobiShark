@@ -35,6 +35,7 @@ int packet_num = 0;
 FILE *log_file;
 FILE *log_file_dir;
 char filter[80];
+char filter_attribute[4][80];
 struct sockaddr_in source, dest;
 struct sigaction act;
 
@@ -68,32 +69,40 @@ void get_logdir();
 int rmdirs(const char *path, int force);
 
 // 정렬 함수, -1이면 앞에, 1이면 뒤로 배치하면서 출력할 것이다.
-int datesort(const struct dirent** file1, const struct dirent** file2){
+static inline int datesort(const struct dirent** file1, const struct dirent** file2){
 	struct stat info1, info2;
-	int rval;
 	char path1[PATH_MAX], path2[PATH_MAX];
+	int rval = 0;
 
-	rval = stat("./log_dir", &info1);
+	sprintf(path1,"./logdir/%s", (*file1)->d_name);
+	sprintf(path2, "./logdir/%s", (*file2)->d_name);
+
+
+	rval = stat(path1, &info1);
 	// -1 오류 발생
 	if(rval){
 		printf("stat error\n");
 		return 0;
 	}
 
-	rval = stat("./log_dir", &info2);
+	rval = stat(path2, &info2);
 	if(rval){
 		printf("stat error\n");
 		return 0;
 	}
 
+
+	printf("시간비교 %s  %ld , %s %ld \n",(*file1)->d_name, info1.st_mtime,(*file2)->d_name, info2.st_mtime );
 	/* stat.mtime 마지막으로 수정된 시간*/
+	/* stat.ctime 마지막으로 상태가 변화한 시간 */
 	return info1.st_mtime < info2.st_mtime;
 }
 
 int file_select(const struct dirent *entry)
 {
+
 	//http는 예제, 동작이 확인되면, 변경할 예정이다.
-	return strcmp(entry->d_name, "http");
+	return strstr(entry->d_name, filter) != NULL;
 }
 
 
@@ -110,7 +119,9 @@ int main(int argc, char *argv[])
 	
 		switch(input){
 			case 1:
-				while(packet_handler()){}
+				while(packet_handler()){
+					sleep(1);
+				}
 				break;
 			case 2:
 				packet_analyze("http");
@@ -118,7 +129,7 @@ int main(int argc, char *argv[])
 			case 3:
 				printf("\nfilter input : ");
 				scanf("%s", filter);
-				packet_list();
+				//packet_list();
 				break;
 			case 4:
 				delete_logdir();
@@ -321,11 +332,15 @@ int packet_analyze(char *filter){
 	struct dirent **namelist;
 	int count;
 	int idx;
-	const char *path = "./log_dir";
+	const char *path = "./logdir";
 
-	if((count = scandir(path, &namelist, datesort, file_select)) == -1){
+	printf("fuction : packet_analyze:320\n");
+
+	if((count = scandir(path, &namelist, file_select, datesort)) == -1){
 		fprintf(stderr, "%s direntory scan error\n", path);
 	}
+
+	printf("반환된 count : %d\n", count);
 
 	for(idx = 0; idx < count; idx++){
 		//파일의 이름 테스트
@@ -462,7 +477,7 @@ void print_menu(){
 	printf("\n=====Program Menu=====\n");
 	printf("1.Capture Start \n");
 	printf("2.List View \n");
-	printf("3.Packet Analyze \n");	
+	printf("3.set Filter \n");	
 	printf("4.exit \n");
 }
 
