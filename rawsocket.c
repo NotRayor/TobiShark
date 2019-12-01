@@ -19,6 +19,8 @@
 //시스템 관련 헤더
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <netinet/ip_icmp.h>  //icmp_추가
+
 
 #define BUFFER_SIZE 65536
 #define PATH_MAX 512
@@ -53,6 +55,8 @@ void close_handler(void){
 
 void log_eth(struct ethhdr *eth);
 void log_ip(struct iphdr *ip);
+void log_icmp(struct icmp *icmp);			//icmp_추가
+void log_ih_idseq(struct ih_idseq *ih_idseq); //icmp_추가
 void log_tcp(struct tcphdr *tcp);
 void log_udp(struct udphdr *udp);
 void log_data(unsigned char *data, int remaining_data);
@@ -276,9 +280,12 @@ int packet_handler(){
 
 	protocol = (unsigned int)ip->protocol;
 	
-
-	// L4 Transport Layer
-	if(protocol == TCP){
+	if (protocol == ICMP) {																//icmp_추가
+		struct icmp *icmp = (struct icmp*)(buffer + sizeof(struct ethhdr) + iphdrlen);  //icmp_추가
+		strcpy(protocol_name, "ICMP");													//icmp_추가
+		source_port = ntohs(ip->saddr);													//icmp_추가	
+		dest_port = ntohs(ip->daddr);													//icmp_추가		
+	}else if(protocol == TCP){				// L4 TransPort Layer
 		struct tcphdr *tcp = (struct tcphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		strcpy(protocol_name,"TCP");
 		source_port = ntohs(tcp->source);
@@ -305,7 +312,10 @@ int packet_handler(){
 	log_file = fopen(&filename, "w");
 	log_eth(eth);
 	log_ip(ip);
-	if(protocol == TCP){
+	if (protocol == ICMP) {																//icmp_추가
+		struct icmp *icmp = (struct icmp*)(buffer + sizeof(struct ethhdr) + iphdrlen);  //icmp_추가
+		log_icmp(icmp);																	//icmp_추가
+	}else if(protocol == TCP){
 		struct tcphdr *tcp = (struct tcphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		log_tcp(tcp);
 	}
@@ -432,6 +442,17 @@ void log_ip(struct iphdr *ip){
 	fprintf(log_file," -Source IP :%s \n", inet_ntoa(source.sin_addr));
 	fprintf(log_file," -Destination IP :%s \n", inet_ntoa(dest.sin_addr));
 }
+
+void log_icmp(struct icmp *icmp) {													//icmp_추가
+	struct ih_idseq *ih_idseq;														//icmp_추가
+	fprintf(log_file, "===== ICMP =====\n");										//icmp_추가	
+	fprintf(log_file, "-Type : %d \n", (unsigned int)icmp->icmp_type);				//icmp_추가
+	fprintf(log_file, "-Code : %d \n", (unsigned int)icmp->icmp_code);				//icmp_추가
+	fprintf(log_file, "-Checksum : %x \n", (unsigned int)icmp->icmp_cksum);			//icmp_추가
+	fprintf(log_file, "-Identifier : %d \n", (unsigned int)ih_idseq->icd_id);		//icmp_추가
+	fprintf(log_file, "-Sequence number : %d \n", (unsigned int)ih_idseq->icd_seq); //icmp_추가
+}																					//icmp_추가
+					
 
 void log_tcp(struct tcphdr *tcp){
 	fprintf(log_file,"===== TCP =====\n");
