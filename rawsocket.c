@@ -34,6 +34,7 @@
 
 int rawsocket;
 int packet_num = 0;
+int remaining_data = 0;
 FILE *log_file;
 FILE *log_file_dir;
 char filter[80];
@@ -279,22 +280,31 @@ int packet_handler(){
 	iphdrlen = ip->ihl * 4; 
 
 	protocol = (unsigned int)ip->protocol;
-	
+
+	unsigned char * data = (buffer + iphdrlen + sizeof(struct ethhdr));	
+	remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr));
+
 	if (protocol == ICMP) {																//icmp_추가
 		struct icmp *icmp = (struct icmp*)(buffer + sizeof(struct ethhdr) + iphdrlen);  //icmp_추가
 		strcpy(protocol_name, "ICMP");													//icmp_추가
 		source_port = ntohs(ip->saddr);													//icmp_추가	
-		dest_port = ntohs(ip->daddr);													//icmp_추가		
+		dest_port = ntohs(ip->daddr);								//icmp_추가		
+		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct icmp));	
+		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct icmp));
 	}else if(protocol == TCP){				// L4 TransPort Layer
 		struct tcphdr *tcp = (struct tcphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		strcpy(protocol_name,"TCP");
 		source_port = ntohs(tcp->source);
 		dest_port = ntohs(tcp->dest);
+		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct tcphdr));	
+		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct tcphdr));
 	}else if(protocol == UDP){
 		struct udphdr *udp = (struct udphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		strcpy(protocol_name,"UDP");
 		source_port = ntohs(udp->source);
 		dest_port = ntohs(udp->dest);
+		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));	
+		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));
 	}
 	else{
 		sprintf(protocol_name, "%d", protocol);
@@ -323,6 +333,9 @@ int packet_handler(){
 		struct udphdr *udp = (struct udphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		log_udp(udp);
 	}
+
+	log_data(data, remaining_data);
+
 	fclose(log_file);
 	get_logdir();
 
@@ -450,7 +463,7 @@ void log_icmp(struct icmp *icmp) {													//icmp_추가
 	fprintf(log_file, "-Code : %d \n", (unsigned int)icmp->icmp_code);				//icmp_추가
 	fprintf(log_file, "-Checksum : %x \n", (unsigned int)icmp->icmp_cksum);			//icmp_추가
 	fprintf(log_file, "-Identifier : %d \n", (unsigned int)ih_idseq->icd_id);		//icmp_추가
-	fprintf(log_file, "-Sequence number : %d \n", (unsigned int)ih_idseq->icd_seq); //icmp_추가
+	fprintf(log_file, "-Sequence number : %d \n", (unsigned int)ih_idseq->icd_seq);//icmp_추가
 }																					//icmp_추가
 					
 
@@ -470,13 +483,22 @@ void log_udp(struct udphdr *udp){
 	fprintf(log_file," -Checksum  : %d \n", ntohs(udp->check));
 }
 
-void log_data(unsigned char *data, int remaining_data){	
+void log_data(unsigned char *data, int remaining_data){
+
+	fprintf(log_file,"===== DATA =====\n");
 	for(int i = 0; i < remaining_data; i++){
-		if(i!=0 && i%16 == 0){
-			fprintf(log_file,"\n");
+	
+
+		if(i!=0){
 			fprintf(log_file, "%.2x ", data[i]);
 		}
+	
+		if(i%16 == 0)
+			fprintf(log_file, "\n");
+
+
 	}
+
 	fprintf(log_file, "\n");	
 }
 
