@@ -35,10 +35,15 @@
 int rawsocket;
 int packet_num = 0;
 int remaining_data = 0;
+int max_file; // 현재 받은 파일의 수
 FILE *log_file;
 FILE *log_file_dir;
 char filter[80];
-char filter_attribute[4][80];
+char filter2[80];
+char file_token[4][40];
+char file_list[1000][100]; // 파일 명이 매핑되는 배열
+
+
 struct sockaddr_in source, dest;
 struct sigaction act;
 
@@ -73,6 +78,34 @@ void delete_logdir();
 void get_logdir();
 int rmdirs(const char *path, int force);
 
+void sort_filelist(){
+	char number[10];
+
+	for(int i = 0; i < packet_num; i++){
+		tokenizer(file_list[i]);
+		strcpy(number, file_token[0]);
+		printf("숫자 추출 : %d \n", atoi(number));
+	}
+}
+
+// 선택한 파일의 이름 문자열을 쪼갠다.
+// 쪼갠 문자열을 바탕으로, 연관된 IP를 출력하도록 만들어야한다.
+// 그런데 AND로 둘다 선택이 가능한가??
+// flag 0 : source ip, flag 1 : destination ip
+int associate_file(int ch, int flag){
+	
+	sort_filelist();
+
+	if(0 <= ch && ch <= packet_num){
+		tokenizer(file_list[ch]);
+		strcpy(filter2 ,file_token[1]);	
+		printf("filter2 확인 :%s \n", filter2);
+	}
+	else{
+		printf("입력값 재확인  \n");
+	}
+}
+
 // 정렬 함수, -1이면 앞에, 1이면 뒤로 배치하면서 출력할 것이다.
 static inline int datesort(const struct dirent** file1, const struct dirent** file2){
 	struct stat info1, info2;
@@ -96,7 +129,6 @@ static inline int datesort(const struct dirent** file1, const struct dirent** fi
 		return 0;
 	}
 
-
 	printf("시간비교 %s  %ld , %s %ld \n",(*file1)->d_name, info1.st_mtime,(*file2)->d_name, info2.st_mtime );
 	/* stat.mtime 마지막으로 수정된 시간*/
 	/* stat.ctime 마지막으로 상태가 변화한 시간 */
@@ -105,9 +137,12 @@ static inline int datesort(const struct dirent** file1, const struct dirent** fi
 
 int file_select(const struct dirent *entry)
 {
-
-	//http는 예제, 동작이 확인되면, 변경할 예정이다.
-	return strstr(entry->d_name, filter) != NULL;
+	if(strstr(entry->d_name, filter) && strstr(entry->d_name, filter2)){
+		return 1;
+	}
+	else{
+		return 0;
+	}
 }
 
 
@@ -125,11 +160,11 @@ int main(int argc, char *argv[])
 		switch(input){
 			case 1:
 				while(packet_handler()){
-					sleep(1);
+					//sleep(1);
 				}
 				break;
 			case 2:
-				packet_analyze("http");
+				packet_analyze("");
 				break;
 			case 3:
 				printf("\nfilter input : ");
@@ -345,6 +380,7 @@ int packet_handler(){
 	printf("Protocol %s\t \n", protocol_name);
 
 	packet_num++;
+	max_file = packet_num;
 
 	free(buffer);
 	return 1;
@@ -368,13 +404,22 @@ int packet_analyze(char *filter){
 	for(idx = 0; idx < count; idx++){
 		//파일의 이름 테스트
 		printf("%s\n", namelist[idx]->d_name);
+		strcpy(file_list[idx], namelist[idx]->d_name);
 	}
+
+	//file_list에 데이터 저장, 디버깅 완료
 
 	for(idx = 0; idx < count; idx++){
 		free(namelist[idx]);
 	}
 
 	free(namelist);
+
+	int input = 0;
+	printf("프레임 번호를 입력하세요 : ");
+	scanf(" %d", &input);
+	getchar();
+	associate_file(input, 0);
 
 	return 0;
 
@@ -526,9 +571,11 @@ void print_menu(){
 
 void tokenizer(char str[1024]){
 	char *ptr = strtok(str, "_");
+	int i = 0;
 
 	while(ptr != NULL){
-		printf("%s \n", ptr);
+		strcpy(file_token[i], ptr);
+		i++;
 		ptr = strtok(NULL, "_");
 	}
 }
