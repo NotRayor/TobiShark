@@ -40,6 +40,7 @@ int remaining_data = 0;
 int max_file; // 현재 받은 파일의 수
 FILE *log_file;
 FILE *log_file_dir;
+FILE *read_file = NULL;
 char filter[80];
 char filter2[80];
 char file_token[4][40];
@@ -93,15 +94,14 @@ void sort_filelist(){
 //	printf("packet_num : %d \n", packet_num);
 }
 
-// 선택한 파일의 이름 문자열을 쪼갠다.
-// 쪼갠 문자열을 바탕으로, 연관된 IP를 출력하도록 만들어야한다.
 // 그런데 AND로 둘다 선택이 가능한가??
-// flag 0 : source ip, flag 1 : destination ip
+// flag 0 : source ip, flag 1 : destination ip ?
 int associate_file(int ch, int flag){
 
+	// ch범위를 벗어나면 필터동작 X, 번호를 다시 확인
 	if(0 <= ch && ch <= packet_num){
 		tokenizer(file_list[ch]);
-		strcpy(filter2 ,file_token[1]);	
+		strcpy(filter2 ,file_token[1]);
 	}
 	else{
 		printf("입력값 재확인  \n");
@@ -119,6 +119,45 @@ int file_select(const struct dirent *entry)
 	}
 }
 
+// ch. ch패킷 선택
+void file_read(int ch)
+{
+	read_file = NULL;
+	char dir_path[120] = "./logdir/";
+	char path[120]; 
+	strcpy(path, file_list[ch]);
+	strcat(dir_path, path);
+
+	read_file = fopen(dir_path,"r");
+	printf("합친 문자열 %s \n", dir_path);
+
+	if(read_file != NULL)
+	{
+		char strTemp[512];
+		char *pStr;
+
+		while( !feof(read_file))
+		{
+			pStr = fgets(strTemp, sizeof(strTemp), read_file);
+			printf("%s", strTemp);
+		}
+		fclose(read_file);
+	}
+	else
+	{
+		printf("read_file Error \n");
+	}
+
+}
+
+void packetSelect(){
+	int input = 0;
+	printf("분석할  패킷의 프레임 번호 : ");
+	scanf(" %d", &input);
+	getchar();
+	// 100: 선택된 파일의 ip필터 적용
+	file_read(input);
+}
 
 int main(int argc, char *argv[])
 {
@@ -138,19 +177,30 @@ int main(int argc, char *argv[])
 				packet_handler();
 				break;
 			case 2:
+				// file 출력 및 선택
 				packet_analyze("");
 				break;
-			case 3:
+			case 3: // 패킷 선택
+				packetSelect();
+				break;
+			case 4: // 프로토콜 설정 
 				printf("\nfilter input : ");
 				scanf("%s", filter);
 				printf("filter set...\n");
 				break;
-			case 4:
+			case 5: // 연관패킷 설정
+				printf("연관 프레임 번호를 입력하세요 : ");
+				scanf(" %d", &input);
+				getchar();
+				// 100: 선택된 파일의 ip필터 적용
+				associate_file(input, 0);
+				break;
+			case 6: // 필터 초기화
 				strcpy(filter,"");
 				strcpy(filter2,"");
 				printf("filter reset...\n");
 				break;
-			case 5:
+			case 7: // 종료 
 				delete_logdir();
 				exit(1);
 				break;
@@ -411,7 +461,6 @@ int packet_analyze(char *filter){
 
 	// .이나 ..을 계산에서 제외시키기 위함이다.
 	if(strcmp(filter,"")==0 && strcmp(filter2,"")==0){
-		printf("반환된 count : %d\n", count-2);
 		plus = 2;
 	}
 
@@ -420,7 +469,7 @@ int packet_analyze(char *filter){
 	for(idx = plus; idx < count; idx++){
 		//파일의 이름 출력
 		printf("%s\n", namelist[idx]->d_name);
-		strcpy(file_list[idx-plus], namelist[idx]->d_name);
+		strcpy(file_list[idx - plus], namelist[idx]->d_name);
 	}
 
 	//file_list에 데이터 저장, 디버깅 완료
@@ -430,12 +479,6 @@ int packet_analyze(char *filter){
 	}
 
 	free(namelist);
-
-	int input = 0;
-	printf("프레임 번호를 입력하세요 : ");
-	scanf(" %d", &input);
-	getchar();
-	associate_file(input, 0);
 
 	return 0;
 
@@ -537,15 +580,21 @@ void print_menu(){
 	printf("\n=====Program Menu=====\n");
 	printf("1.Capture Start \n");
 	printf("2.List View \n");
-	printf("3.set Filter \n");
-	printf("4.reset Filter \n");
-	printf("5.exit \n");
+	printf("3.Select Packet\n");
+	printf("4.set Filter \n");
+	printf("5.set associate Filter \n");
+	printf("6.reset Filter \n");
+	printf("7.exit \n");
 }
 
 void tokenizer(char str[1024]){
-	char *ptr = strtok(str, "_");
+	char temp[1024];
+	char *ptr;
 	int i = 0;
 
+	strcpy(temp, str);
+	ptr = strtok(temp, "_");
+	
 	while(ptr != NULL){
 		strcpy(file_token[i], ptr);
 		printf("%s ",file_token[i]);
