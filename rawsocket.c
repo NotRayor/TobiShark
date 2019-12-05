@@ -42,7 +42,8 @@ FILE *log_file;
 FILE *log_file_dir;
 FILE *read_file = NULL;
 char filter[80];
-char filter2[80];
+char filter2[80]; // source ip
+char filter3[80]; // dest ip 
 char file_token[4][40];
 char file_list[1000][100]; // 파일 명이 매핑되는 배열
 
@@ -94,15 +95,13 @@ void sort_filelist(){
 //	printf("packet_num : %d \n", packet_num);
 }
 
-// 그런데 AND로 둘다 선택이 가능한가??
-// flag 0 : source ip, flag 1 : destination ip ?
 int associate_file(int ch, int flag){
 
 	// ch범위를 벗어나면 필터동작 X, 번호를 다시 확인
 	if(0 <= ch && ch <= packet_num){
 		tokenizer(file_list[ch]);
 		strcpy(filter2 ,file_token[1]);
-	}
+		}
 	else{
 		printf("입력값 재확인  \n");
 	}
@@ -111,7 +110,8 @@ int associate_file(int ch, int flag){
 // 파일 선택 함수 
 int file_select(const struct dirent *entry)
 {
-	if(strstr(entry->d_name, filter) && strstr(entry->d_name, filter2)){
+	if(strstr(entry->d_name, filter) && (strstr(entry->d_name, filter2)))
+	{
 		return 1;
 	}
 	else{
@@ -408,7 +408,9 @@ int packet_handler(){
 		sprintf(str_frame, "%d", packet_num);
 	}
 
-	sprintf(filename, "./logdir/%s_%s_%s_%s.txt",str_frame, inet_ntoa(source.sin_addr), inet_ntoa(dest.sin_addr), protocol_name);
+	char destIP[60];
+	strcpy(destIP, inet_ntoa(dest.sin_addr));
+	sprintf(filename, "./logdir/%s_%s_%s_%s.txt",str_frame, inet_ntoa(source.sin_addr), destIP, protocol_name);
 	log_file = fopen(&filename, "w");
 	log_eth(eth);
 	log_ip(ip);
