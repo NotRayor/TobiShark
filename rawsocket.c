@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <time.h>
+#include <pthread.h>
 //디렉토리 생성 라이브러리
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -31,6 +32,7 @@
 #define DNS 53
 #define HTTP 80
 
+ 
 
 int rawsocket;
 int packet_num = 0;
@@ -46,6 +48,7 @@ char file_list[1000][100]; // 파일 명이 매핑되는 배열
 
 struct sockaddr_in source, dest;
 struct sigaction act;
+pthread_mutex_t mutex;
 
 int packet_handler(void);
 int packet_analyze(char *filter);
@@ -84,8 +87,10 @@ void sort_filelist(){
 	for(int i = 0; i < packet_num; i++){
 		tokenizer(file_list[i]);
 		strcpy(number, file_token[0]);
-		printf("숫자 추출 : %d \n", atoi(number));
+		//printf("숫자 추출 : %d \n", atoi(number));
 	}
+//	printf("84: sortfile debug\n");
+//	printf("packet_num : %d \n", packet_num);
 }
 
 // 선택한 파일의 이름 문자열을 쪼갠다.
@@ -93,48 +98,17 @@ void sort_filelist(){
 // 그런데 AND로 둘다 선택이 가능한가??
 // flag 0 : source ip, flag 1 : destination ip
 int associate_file(int ch, int flag){
-	
-	sort_filelist();
 
 	if(0 <= ch && ch <= packet_num){
 		tokenizer(file_list[ch]);
 		strcpy(filter2 ,file_token[1]);	
-		printf("filter2 확인 :%s \n", filter2);
 	}
 	else{
 		printf("입력값 재확인  \n");
 	}
 }
 
-// 정렬 함수, -1이면 앞에, 1이면 뒤로 배치하면서 출력할 것이다.
-static inline int datesort(const struct dirent** file1, const struct dirent** file2){
-	struct stat info1, info2;
-	char path1[PATH_MAX], path2[PATH_MAX];
-	int rval = 0;
-
-	sprintf(path1,"./logdir/%s", (*file1)->d_name);
-	sprintf(path2, "./logdir/%s", (*file2)->d_name);
-
-
-	rval = stat(path1, &info1);
-	// -1 오류 발생
-	if(rval){
-		printf("stat error\n");
-		return 0;
-	}
-
-	rval = stat(path2, &info2);
-	if(rval){
-		printf("stat error\n");
-		return 0;
-	}
-
-	printf("시간비교 %s  %ld , %s %ld \n",(*file1)->d_name, info1.st_mtime,(*file2)->d_name, info2.st_mtime );
-	/* stat.mtime 마지막으로 수정된 시간*/
-	/* stat.ctime 마지막으로 상태가 변화한 시간 */
-	return info1.st_mtime < info2.st_mtime;
-}
-
+// 파일 선택 함수 
 int file_select(const struct dirent *entry)
 {
 	if(strstr(entry->d_name, filter) && strstr(entry->d_name, filter2)){
@@ -150,6 +124,8 @@ int main(int argc, char *argv[])
 {
 	int input, end_flag = 0;
 	socklen_t len;
+	pthread_mutex_init(&mutex, NULL);
+	
 
 	while(!end_flag){
 
@@ -159,9 +135,7 @@ int main(int argc, char *argv[])
 	
 		switch(input){
 			case 1:
-				while(packet_handler()){
-					//sleep(1);
-				}
+				packet_handler();
 				break;
 			case 2:
 				packet_analyze("");
@@ -169,9 +143,14 @@ int main(int argc, char *argv[])
 			case 3:
 				printf("\nfilter input : ");
 				scanf("%s", filter);
-				//packet_list();
+				printf("filter set...\n");
 				break;
 			case 4:
+				strcpy(filter,"");
+				strcpy(filter2,"");
+				printf("filter reset...\n");
+				break;
+			case 5:
 				delete_logdir();
 				exit(1);
 				break;
@@ -285,6 +264,7 @@ int packet_handler(){
 	unsigned char protocol_name[10];
 	int packet_len = 0;
 
+
 	act.sa_handler=close_handler;
 	sigemptyset(&act.sa_mask);
 	act.sa_flags=0;
@@ -296,6 +276,15 @@ int packet_handler(){
 		printf("pcap end \n");
 		return -1;
 	}
+
+	while(1){
+	struct sockaddr saddr;
+	saddr_len = sizeof(saddr);
+	iphdrlen = 0;
+	protocol = 0, source_port = 0, dest_port = 0;
+	buffer = (unsigned char*) malloc(BUFFER_SIZE); // receive data
+	protocol_name[10] = "";
+	packet_len = 0;
 
 	memset(buffer, 0, BUFFER_SIZE);
 
@@ -340,6 +329,9 @@ int packet_handler(){
 		dest_port = ntohs(udp->dest);
 		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));	
 		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));
+	}else if(protocol == HTTP){
+		//printf("=====HTTP=====\n");
+		//printf("%s\n", remaining_data); //세그멘테이션 오류, 이거 수정하면 동작이 될까?	
 	}
 	else{
 		sprintf(protocol_name, "%d", protocol);
@@ -353,7 +345,20 @@ int packet_handler(){
 	//packet_handler 변경 점	
 	make_logdir();
 	char filename[500];
-	sprintf(filename, "./logdir/%d_%s_%s_%s.txt", packet_num, inet_ntoa(source.sin_addr), inet_ntoa(dest.sin_addr), protocol_name);
+	char str_frame[10];
+	
+	if(packet_num < 10){
+		sprintf(str_frame,"000%d",packet_num);
+	}
+	else if(10 <= packet_num && packet_num < 100){
+		sprintf(str_frame,"00%d",packet_num);
+	}else if(100 <= packet_num && packet_num < 1000){
+		sprintf(str_frame, "0%d", packet_num);
+	}else if(1000 <= packet_num && packet_num < 10000){
+		sprintf(str_frame, "%d", packet_num);
+	}
+
+	sprintf(filename, "./logdir/%s_%s_%s_%s.txt",str_frame, inet_ntoa(source.sin_addr), inet_ntoa(dest.sin_addr), protocol_name);
 	log_file = fopen(&filename, "w");
 	log_eth(eth);
 	log_ip(ip);
@@ -368,7 +373,9 @@ int packet_handler(){
 		struct udphdr *udp = (struct udphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		log_udp(udp);
 	}
-
+	else if(protocol == HTTP){
+		
+	}
 	log_data(data, remaining_data);
 
 	fclose(log_file);
@@ -383,28 +390,37 @@ int packet_handler(){
 	max_file = packet_num;
 
 	free(buffer);
+	}
+
 	return 1;
 }
 
 
 int packet_analyze(char *filter){
 	struct dirent **namelist;
+	int plus = 0;
 	int count;
 	int idx;
 	const char *path = "./logdir";
 
-	printf("fuction : packet_analyze:320\n");
+	printf("fuction : packet_analyze:397\n");
 
-	if((count = scandir(path, &namelist, file_select, datesort)) == -1){
+	if((count = scandir(path, &namelist, file_select, alphasort)) == -1){
 		fprintf(stderr, "%s direntory scan error\n", path);
+	}
+
+	// .이나 ..을 계산에서 제외시키기 위함이다.
+	if(strcmp(filter,"")==0 && strcmp(filter2,"")==0){
+		printf("반환된 count : %d\n", count-2);
+		plus = 2;
 	}
 
 	printf("반환된 count : %d\n", count);
 
-	for(idx = 0; idx < count; idx++){
-		//파일의 이름 테스트
+	for(idx = plus; idx < count; idx++){
+		//파일의 이름 출력
 		printf("%s\n", namelist[idx]->d_name);
-		strcpy(file_list[idx], namelist[idx]->d_name);
+		strcpy(file_list[idx-plus], namelist[idx]->d_name);
 	}
 
 	//file_list에 데이터 저장, 디버깅 완료
@@ -424,50 +440,6 @@ int packet_analyze(char *filter){
 	return 0;
 
 }
-
-int packet_list()
-{
-	printf("동작시작");
-
-	DIR *dir_ptr = NULL;
-	char path[] = {"./logdir"};
-	char filename[1024];
-	struct stat buf;
-	struct dirent *file = NULL;
-
-
-	/*목록 읽을 디렉터리 명을 DIR로 리턴 */
-	if((dir_ptr = opendir(path)) == NULL){
-		return unlink(path);
-	}
-
-
-	/*처음부터 파일, 디렉터리 명을 한개씩 읽는다. */
-	while((file = readdir(dir_ptr))!=NULL){
-		
-		if(strcmp(file->d_name,".")==0 || strcmp(file->d_name,"..")==0){
-			continue;
-		}
-
-		//filename ./path
-		sprintf(filename, "%s/%s", path, file->d_name);
-
-		//lstat 링크 파일 자체 정보를 받아온다. 
-		//파일 속성을 얻어 buf에 저장,
-		if(lstat(filename,&buf)==-1){
-			continue;
-		}
-
-		//S_ISREG 일반파일 S_ISLNK 심볼릭 링크
-		else if(S_ISREG(buf.st_mode) || S_ISLNK(buf.st_mode)){
-			printf("파일이름  %s \n", file->d_name);
-			tokenizer(file->d_name);
-		}
-	}
-	closedir(dir_ptr);
-	return 0;
-}
-
 
 void log_eth(struct ethhdr *eth){
 
@@ -565,8 +537,9 @@ void print_menu(){
 	printf("\n=====Program Menu=====\n");
 	printf("1.Capture Start \n");
 	printf("2.List View \n");
-	printf("3.set Filter \n");	
-	printf("4.exit \n");
+	printf("3.set Filter \n");
+	printf("4.reset Filter \n");
+	printf("5.exit \n");
 }
 
 void tokenizer(char str[1024]){
@@ -575,6 +548,7 @@ void tokenizer(char str[1024]){
 
 	while(ptr != NULL){
 		strcpy(file_token[i], ptr);
+		printf("%s ",file_token[i]);
 		i++;
 		ptr = strtok(NULL, "_");
 	}
