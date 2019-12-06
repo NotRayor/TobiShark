@@ -32,7 +32,9 @@
 #define DNS 53
 #define HTTP 80
 
- 
+typedef struct http_header{
+	unsigned char http_first[3000];
+}http_header;
 
 int rawsocket;
 int packet_num = 0;
@@ -45,12 +47,12 @@ char filter[80];
 char filter2[80]; // source ip
 char filter3[80]; // dest ip 
 char file_token[4][40];
-char file_list[1000][100]; // 파일 명이 매핑되는 배열
+char file_list[10000][100]; // 파일 명이 매핑되는 배열
 
 
 struct sockaddr_in source, dest;
 struct sigaction act;
-pthread_mutex_t mutex;
+struct http_header *hh;
 
 int packet_handler(void);
 int packet_analyze(char *filter);
@@ -70,7 +72,7 @@ void log_icmp(struct icmp *icmp);			//icmp_추가
 void log_ih_idseq(struct ih_idseq *ih_idseq); //icmp_추가
 void log_tcp(struct tcphdr *tcp);
 void log_udp(struct udphdr *udp);
-void log_data(unsigned char *data, int remaining_data);
+void log_data(unsigned char *data, int remaining_data, int protocol);
 
 // 문자열 관련 함수
 void print_eth(struct ethhdr *eth);
@@ -83,18 +85,7 @@ void delete_logdir();
 void get_logdir();
 int rmdirs(const char *path, int force);
 
-void sort_filelist(){
-	char number[10];
-
-	for(int i = 0; i < packet_num; i++){
-		tokenizer(file_list[i]);
-		strcpy(number, file_token[0]);
-		//printf("숫자 추출 : %d \n", atoi(number));
-	}
-//	printf("84: sortfile debug\n");
-//	printf("packet_num : %d \n", packet_num);
-}
-
+// 선택 패킷의 도착지 주소를 패킷2로 저장한다.
 int associate_file(int ch, int flag){
 
 	// ch범위를 벗어나면 필터동작 X, 번호를 다시 확인
@@ -133,7 +124,7 @@ void file_read(int ch)
 
 	if(read_file != NULL)
 	{
-		char strTemp[512];
+		char strTemp[4096];
 		char *pStr;
 
 		while( !feof(read_file))
@@ -163,8 +154,6 @@ int main(int argc, char *argv[])
 {
 	int input, end_flag = 0;
 	socklen_t len;
-	pthread_mutex_init(&mutex, NULL);
-	
 
 	while(!end_flag){
 
@@ -345,6 +334,8 @@ int packet_handler(){
 		return 0;
 	}
 
+	buffer[buflen] = 0;
+
 	// L2 link Layer
 	struct ethhdr *eth = (struct ethhdr *)(buffer);
 	
@@ -365,7 +356,7 @@ int packet_handler(){
 		dest_port = ntohs(ip->daddr);								//icmp_추가		
 		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct icmp));	
 		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct icmp));
-	}else if(protocol == TCP){				// L4 TransPort Layer
+	}else if(protocol == TCP ){				// L4 TransPort Layer
 		struct tcphdr *tcp = (struct tcphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		strcpy(protocol_name,"TCP");
 		source_port = ntohs(tcp->source);
@@ -379,18 +370,28 @@ int packet_handler(){
 		dest_port = ntohs(udp->dest);
 		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));	
 		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));
-	}else if(protocol == HTTP){
-		//printf("=====HTTP=====\n");
-		//printf("%s\n", remaining_data); //세그멘테이션 오류, 이거 수정하면 동작이 될까?	
-	}
-	else{
+	}else{
+		if(protocol == 80){
+			protocol = 12; 	
+		}
 		sprintf(protocol_name, "%d", protocol);
 	}
-
+	
 	if(DNS == source_port || DNS == dest_port)
 		strcpy(protocol_name,"DNS");
-	else if(HTTP == source_port || HTTP == dest_port)
+	// 이미지 http 거부 
+	else if((HTTP == source_port || HTTP == dest_port) && (buflen > 80 && buflen < 2000)){
 		strcpy(protocol_name,"HTTP");
+	}else if(443 == source_port || 443 == dest_port){
+		strcpy(protocol_name,"https-tls");
+	}
+
+	if(strcmp(protocol_name,"HTTP")==0) {	
+		hh = (struct http_header*)(buffer + sizeof(struct ethhdr) + iphdrlen + sizeof(struct tcphdr));
+		int http_size = remaining_data;
+		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr) + sizeof(struct http_header));	
+		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr) +sizeof(struct http_header) );
+	}
 
 	//packet_handler 변경 점	
 	make_logdir();
@@ -425,11 +426,16 @@ int packet_handler(){
 		struct udphdr *udp = (struct udphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		log_udp(udp);
 	}
-	else if(protocol == HTTP){
-		
-	}
-	log_data(data, remaining_data);
 
+	// 위와 분할시켜야 한다. 구조상,
+	// log_http
+	if(strcmp(protocol_name,"HTTP")==0){
+		fprintf(log_file,"=====HTTP===== \n");
+		fprintf(log_file,"%s \n", hh->http_first);
+	}
+	else{
+		log_data(data, remaining_data, protocol);
+	}
 	fclose(log_file);
 	get_logdir();
 
@@ -438,6 +444,11 @@ int packet_handler(){
 	printf("Dest %s\t", inet_ntoa(dest.sin_addr));
 	printf("Protocol %s\t \n", protocol_name);
 
+	// 디버깅용, 시연 전에는 지워야한다.
+	if(strcmp(protocol_name, "HTTP")==0){
+		printf("Length :%d \n", buflen);
+		printf("http 출력 : %s \n", hh->http_first);
+	}
 	packet_num++;
 	max_file = packet_num;
 
@@ -545,7 +556,7 @@ void log_udp(struct udphdr *udp){
 	fprintf(log_file," -Checksum  : %d \n", ntohs(udp->check));
 }
 
-void log_data(unsigned char *data, int remaining_data){
+void log_data(unsigned char *data, int remaining_data, int protocol){
 
 	fprintf(log_file,"===== DATA =====\n");
 	for(int i = 0; i < remaining_data; i++){
