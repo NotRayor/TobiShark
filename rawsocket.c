@@ -21,7 +21,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <netinet/ip_icmp.h>  //icmp_추가
-
+#include "dns.h"
 
 #define BUFFER_SIZE 65536
 #define PATH_MAX 512
@@ -72,6 +72,8 @@ void log_icmp(struct icmp *icmp);			//icmp_추가
 void log_ih_idseq(struct ih_idseq *ih_idseq); //icmp_추가
 void log_tcp(struct tcphdr *tcp);
 void log_udp(struct udphdr *udp);
+void log_dns(struct dns_header *dns, struct dns_question *que, struct dns_resource_record *res, struct dns_handle *han); 
+
 void log_data(unsigned char *data, int remaining_data, int protocol);
 
 // 문자열 관련 함수
@@ -370,7 +372,13 @@ int packet_handler(){
 		dest_port = ntohs(udp->dest);
 		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));	
 		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));
-	}else{
+	}else if (protocol == DNS) {             //dns_추가
+			struct dns_header *dns = (struct dns*)(buffer + sizeof(struct ethhdr) + sizeof(struct udphdr) + iphdrlen); //dns_추가 
+			struct dns_question *que = (struct que*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));       //dns_추가
+			struct dns_resource_record *res = (struct res*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));        //dns_추>가
+			struct dns_handle *han = (struct han*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));
+	} //dns_추가 
+	else{
 		if(protocol == 80){
 			protocol = 12; 	
 		}
@@ -426,6 +434,14 @@ int packet_handler(){
 		struct udphdr *udp = (struct udphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		log_udp(udp);
 	}
+
+	if (strcmp(protocol_name, "DNS") == 0) {        //dns_추가
+			struct dns_header *dns = (struct dns*)(buffer + sizeof(struct ethhdr) + sizeof(struct udphdr) + iphdrlen);        //dns_추가
+			struct dns_question *que = (struct que*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));       //dns_추가
+			struct dns_resource_record *res = (struct res*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));        //dns_추>가
+			struct dns_handle *han = (struct han*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));
+			log_dns(dns, que, res, han);  //dns_추가
+		}       //dns_추가
 
 	// 위와 분할시켜야 한다. 구조상,
 	// log_http
@@ -588,6 +604,41 @@ void print_eth(struct ethhdr *eth){
 	printf("Protocol :%x \n", eth->h_proto); // next layer information
 
 }
+void log_dns(struct dns_header *dns, struct dns_question *que, struct dns_resource_record *res, struct dns_handle *han) {  //dns_추가
+	unsigned char *data;
+	fprintf(log_file, "===== DNS =====\n"); //dns_추가
+	fprintf(log_file, "-Transaction ID :Ox%x \n", dns->xid);        //dns_추가
+	fprintf(log_file, "Flags : %d \n", dns->flags); //dns_추가
+	if (dns->flags == 1) {
+		fprintf(log_file, "Flags: Standard query \n");
+	}
+	else if (dns->flags == 32897) {
+		fprintf(log_file, "Flags : Standard query response, No error \n");
+	}
+	fprintf(log_file, "Questions : %d \n", dns->qdcount / 256);       //dns_추가
+	fprintf(log_file, "Answer RRs : %d \n", dns->ancount / 256);      //dns_추가
+	fprintf(log_file, "Authority RRs : %d \n", dns->nscount / 256);   //dns_추가
+	fprintf(log_file, "Additional RRs : %d \n", dns->arcount / 256);  //dns_추가
+	//fprintf(log_file, "Queries : %d : type : %d, class : %d \n",que->name, que->type, que->class); //dns_추가
+	if ((int)(data[24]) == 5) {
+		fprintf(log_file, "Queries name : www.naver.com \n");
+	}
+	else if ((int)(data[24]) == 6) {
+		fprintf(log_file, "Queries name : www.google.com \n");
+	}
+	else if ((int)(data[24]) == 3) {
+		fprintf(log_file, "Queries name : www.kpu.ac.kr \n");
+	}
+	if (que->type >= 0) {
+		fprintf(log_file, "Queries type : A \n");
+	}
+	if (que->class >= 0) {
+		fprintf(log_file, "Queries class : IN \n");
+	}
+	//fprintf(log_file, "Answers : %d : type :  %d, class :  %d, rttl :  %d, addr : %d \n", res->name, res->type, res->class, res->ttl, han->domain);  //dns_추가
+	//fprintf(log_file, "Additional records : %d, type : %d, class : %d, rttl : %d, addr : %d  \n", res->name, res->type, res->class, res->ttl, han->domain);  //dns_추가
+}
+
 
 void print_menu(){
 	printf("\n=====Program Menu=====\n");
