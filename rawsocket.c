@@ -62,7 +62,7 @@ int packet_list();
 void close_handler(void){
 	printf("\n=====Pcap End=====\n");
 
-	fclose(log_file);
+//	fclose(log_file);
 	close(rawsocket);
 }
 
@@ -104,7 +104,10 @@ int associate_file(int ch, int flag){
 // 파일 선택 함수 
 int file_select(const struct dirent *entry)
 {
-	if(strstr(entry->d_name, filter) && (strstr(entry->d_name, filter2)))
+	char temp_filter[80] = "";
+	strcpy(temp_filter, entry->d_name);
+
+	if(strstr(temp_filter, filter) && (strstr(temp_filter, filter2)))
 	{
 		return 1;
 	}
@@ -123,6 +126,7 @@ void file_read(int ch)
 	strcat(dir_path, path);
 
 	read_file = fopen(dir_path,"r");
+	printf("입력 확인 %d \n", ch);
 	printf("실행 파일  %s \n", dir_path);
 
 	if(read_file != NULL)
@@ -389,12 +393,13 @@ int packet_handler(){
 	if(DNS == source_port || DNS == dest_port)
 		strcpy(protocol_name,"DNS");
 	// 이미지 http 거부 
-	else if((HTTP == source_port || HTTP == dest_port) && (buflen > 80 && buflen < 2000)){
+	else if((HTTP == source_port || HTTP == dest_port) && (buflen > 80 && buflen < 1000)){
 		strcpy(protocol_name,"HTTP");
 	}else if(443 == source_port || 443 == dest_port){
 		strcpy(protocol_name,"https-tls");
 		protocol = 443;
 	}
+
 
 	if(strcmp(protocol_name,"HTTP")==0) {	
 		hh = (struct http_header*)(buffer + sizeof(struct ethhdr) + iphdrlen + sizeof(struct tcphdr));
@@ -417,6 +422,11 @@ int packet_handler(){
 		sprintf(str_frame, "0%d", packet_num);
 	}else if(1000 <= packet_num && packet_num < 10000){
 		sprintf(str_frame, "%d", packet_num);
+	}
+
+	if(!(strcmp("HTTP",protocol_name)==0 || (strcmp("ICMP", protocol_name)==0) || (strcmp("DNS", protocol_name) == 0) ||(strcmp("https-tls",protocol_name)==0)) ){
+		//HTTP, ICMP, DNS 가 아니라면 패킷 캡쳐 거절!
+		continue;
 	}
 
 	char destIP[60];
@@ -477,14 +487,15 @@ int packet_handler(){
 }
 
 
-int packet_analyze(char *filter){
+int packet_analyze(char *filters){
 	struct dirent **namelist;
 	int plus = 0;
-	int count;
+	int count = 0;
 	int idx;
+
 	const char *path = "./logdir";
 
-	printf("fuction : packet_analyze:397\n");
+	printf("Filter : %s // %s  \n", filter, filter2);	
 
 	if((count = scandir(path, &namelist, file_select, alphasort)) == -1){
 		fprintf(stderr, "%s direntory scan error\n", path);
@@ -495,13 +506,14 @@ int packet_analyze(char *filter){
 		plus = 2;
 	}
 
-	printf("반환된 count : %d\n", count);
 
 	for(idx = plus; idx < count; idx++){
 		//파일의 이름 출력
 		printf("%s\n", namelist[idx]->d_name);
 		strcpy(file_list[idx - plus], namelist[idx]->d_name);
 	}
+
+	printf("반환된 count : %d\n", count);
 
 	//file_list에 데이터 저장, 디버깅 완료
 
@@ -642,8 +654,6 @@ void log_dns(struct dns_header *dns, struct dns_question *que, struct dns_resour
 	if (que->class >= 0) {
 		fprintf(log_file, "Queries class : IN \n");
 	}
-	//fprintf(log_file, "Answers : %d : type :  %d, class :  %d, rttl :  %d, addr : %d \n", res->name, res->type, res->class, res->ttl, han->domain);  //dns_추가
-	//fprintf(log_file, "Additional records : %d, type : %d, class : %d, rttl : %d, addr : %d  \n", res->name, res->type, res->class, res->ttl, han->domain);  //dns_추가
 }
 
 
