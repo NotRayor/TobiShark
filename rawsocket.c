@@ -392,6 +392,7 @@ int packet_handler(){
 		strcpy(protocol_name,"HTTP");
 	}else if(443 == source_port || 443 == dest_port){
 		strcpy(protocol_name,"https-tls");
+		protocol = 443;
 	}
 
 	if(strcmp(protocol_name,"HTTP")==0) {	
@@ -576,20 +577,25 @@ void log_data(unsigned char *data, int remaining_data, int protocol){
 
 	fprintf(log_file,"===== DATA =====\n");
 	for(int i = 0; i < remaining_data; i++){
-	
 
 		if(i!=0){
-			fprintf(log_file, "%.2x ", data[i]);
+			if(protocol == 443 && ('!' < data[i] && data[i] < 'z')){
+				fprintf(log_file,"%c", data[i]);
+			}
+			else if(protocol == 443){
+				fprintf(log_file,"%c", '.');
+			}
+			else
+				fprintf(log_file, "%.2x ", data[i]);
+		
+			if(i%16 == 0)
+				fprintf(log_file, "\n");
 		}
-	
-		if(i%16 == 0)
-			fprintf(log_file, "\n");
-
-
 	}
 
 	fprintf(log_file, "\n");	
 }
+
 
 void print_eth(struct ethhdr *eth){
 	printf("=====Ethernet Header===== \n");
