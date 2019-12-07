@@ -86,7 +86,7 @@ void make_logdir();
 void delete_logdir();
 void get_logdir();
 int rmdirs(const char *path, int force);
-
+int list_view(char *filters);
 // 선택 패킷의 도착지 주소를 패킷2로 저장한다.
 int associate_file(int ch, int flag){
 
@@ -175,6 +175,7 @@ int main(int argc, char *argv[])
 			case 2:
 				// file 출력 및 선택
 				packet_analyze("");
+				list_view("");
 				break;
 			case 3: // 패킷 선택
 				packetSelect();
@@ -397,7 +398,6 @@ int packet_handler(){
 		strcpy(protocol_name,"HTTP");
 	}else if(443 == source_port || 443 == dest_port){
 		strcpy(protocol_name,"https-tls");
-		protocol = 443;
 	}
 
 
@@ -462,6 +462,8 @@ int packet_handler(){
 		fprintf(log_file,"%s \n", hh->http_first);
 	}
 	else{
+		if(strcmp(protocol_name,"https-tls")==0)
+			protocol = 443;
 		log_data(data, remaining_data, protocol);
 	}
 	fclose(log_file);
@@ -495,6 +497,47 @@ int packet_analyze(char *filters){
 
 	const char *path = "./logdir";
 
+	// NULL 로 변경, 얜 전체 다 매핑 시키는 용도로 쓸 꺼다. 
+	if((count = scandir(path, &namelist, NULL, alphasort)) == -1){
+		fprintf(stderr, "%s direntory scan error\n", path);
+	}
+
+	// .이나 ..을 계산에서 제외시키기 위함이다.
+	if(strcmp(filter,"")==0 && strcmp(filter2,"")==0){
+		plus = 2;
+	}
+	else{
+		plus = 2;
+	}
+
+	for(idx = plus; idx < count; idx++){
+		//파일의 이름 출력
+		//printf("%s\n", namelist[idx]->d_name);
+		strcpy(file_list[idx - plus], namelist[idx]->d_name);
+	}
+
+	printf("반환된 count : %d\n", count);
+
+	//file_list에 데이터 저장, 디버깅 완료
+
+	for(idx = 0; idx < count; idx++){
+		free(namelist[idx]);
+	}
+
+	free(namelist);
+
+	return 0;
+
+}
+
+int list_view(char *filters){
+	struct dirent **namelist;
+	int plus = 0;
+	int count = 0;
+	int idx;
+
+	const char *path = "./logdir";
+
 	printf("Filter : %s // %s  \n", filter, filter2);	
 
 	if((count = scandir(path, &namelist, file_select, alphasort)) == -1){
@@ -510,7 +553,6 @@ int packet_analyze(char *filters){
 	for(idx = plus; idx < count; idx++){
 		//파일의 이름 출력
 		printf("%s\n", namelist[idx]->d_name);
-		strcpy(file_list[idx - plus], namelist[idx]->d_name);
 	}
 
 	printf("반환된 count : %d\n", count);
