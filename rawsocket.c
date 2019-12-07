@@ -93,6 +93,7 @@ int associate_file(int ch, int flag){
 	// ch범위를 벗어나면 필터동작 X, 번호를 다시 확인
 	if(0 <= ch && ch <= packet_num){
 		tokenizer(file_list[ch]);
+		printf("연관 필터 적용 : %s \n", file_token[1]);
 		strcpy(filter2 ,file_token[1]);
 		}
 	else{
@@ -122,7 +123,7 @@ void file_read(int ch)
 	strcat(dir_path, path);
 
 	read_file = fopen(dir_path,"r");
-	printf("합친 문자열 %s \n", dir_path);
+	printf("실행 파일  %s \n", dir_path);
 
 	if(read_file != NULL)
 	{
@@ -667,7 +668,6 @@ void tokenizer(char str[1024]){
 	
 	while(ptr != NULL){
 		strcpy(file_token[i], ptr);
-		printf("%s ",file_token[i]);
 		i++;
 		ptr = strtok(NULL, "_");
 	}
