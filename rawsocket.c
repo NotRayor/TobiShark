@@ -68,7 +68,7 @@ void close_handler(void){
 
 void log_eth(struct ethhdr *eth);
 void log_ip(struct iphdr *ip);
-void log_icmp(struct icmp *icmp);			//icmp_추가
+void log_icmp(struct icmp *icmp, struct ih_idseq *ih_idseq);			//icmp_추가
 void log_ih_idseq(struct ih_idseq *ih_idseq); //icmp_추가
 void log_tcp(struct tcphdr *tcp);
 void log_udp(struct udphdr *udp);
@@ -362,6 +362,7 @@ int packet_handler(){
 
 	if (protocol == ICMP) {																//icmp_추가
 		struct icmp *icmp = (struct icmp*)(buffer + sizeof(struct ethhdr) + iphdrlen);  //icmp_추가
+		struct ih_idseq *ih_idseq = (struct ih_idseq*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct ih_idseq));
 		strcpy(protocol_name, "ICMP");													//icmp_추가
 		source_port = ntohs(ip->saddr);													//icmp_추가	
 		dest_port = ntohs(ip->daddr);								//icmp_추가		
@@ -382,10 +383,10 @@ int packet_handler(){
 		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));	
 		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));
 	}else if (protocol == DNS) {             //dns_추가
-			struct dns_header *dns = (struct dns*)(buffer + sizeof(struct ethhdr) + sizeof(struct udphdr) + iphdrlen); //dns_추가 
-			struct dns_question *que = (struct que*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));       //dns_추가
-			struct dns_resource_record *res = (struct res*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));        //dns_추>가
-			struct dns_handle *han = (struct han*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));
+			struct dns_header *dns = (struct dns*)(buffer + sizeof(struct ethhdr) + sizeof(struct udphdr) + iphdrlen); //dns_추가
+ 			struct dns_question *que = (struct que*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr)+sizeof(struct dns_question));//dns_수정
+ 			struct dns_resource_record *res = (struct res*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr)+sizeof(struct dns_resource_record));//dns_수정
+ 			struct dns_handle *han = (struct han*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr)+sizeof(struct dns_handle));//dns_수정
 	} //dns_추가 
 	else{
 		if(protocol == 80){
@@ -440,7 +441,8 @@ int packet_handler(){
 	log_ip(ip);
 	if (protocol == ICMP) {																//icmp_추가
 		struct icmp *icmp = (struct icmp*)(buffer + sizeof(struct ethhdr) + iphdrlen);  //icmp_추가
-		log_icmp(icmp);																	//icmp_추가
+		struct ih_idseq *ih_idseq = (struct ih_idseq*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct ih_idseq));//icmp_	수정
+		log_icmp(icmp, ih_idseq); 
 	}else if(protocol == TCP){
 		struct tcphdr *tcp = (struct tcphdr*)(buffer + sizeof(struct ethhdr) + iphdrlen);
 		log_tcp(tcp);
@@ -452,10 +454,10 @@ int packet_handler(){
 
 	if (strcmp(protocol_name, "DNS") == 0) {        //dns_추가
 			struct dns_header *dns = (struct dns*)(buffer + sizeof(struct ethhdr) + sizeof(struct udphdr) + iphdrlen);        //dns_추가
-			struct dns_question *que = (struct que*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));       //dns_추가
-			struct dns_resource_record *res = (struct res*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));        //dns_추>가
-			struct dns_handle *han = (struct han*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr));
-			log_dns(dns, que, res, han);  //dns_추가
+			struct dns_question *que = (struct que*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr) + sizeof(struct dns_question)); //dns_수정
+			struct dns_resource_record *res = (struct res*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr) + sizeof(struct dns_resource_record)); //dns_수정       //dns_추>가
+			struct dns_handle *han = (struct han*)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr) + sizeof(struct dns_handle)); //dns_수정
+			log_dns(dns, que, res, han); 
 		}       //dns_추가
 
 	// 위와 분할시켜야 한다. 구조상,
@@ -603,17 +605,14 @@ void log_ip(struct iphdr *ip){
 	fprintf(log_file," -Source IP :%s \n", inet_ntoa(source.sin_addr));
 	fprintf(log_file," -Destination IP :%s \n", inet_ntoa(dest.sin_addr));
 }
-
-void log_icmp(struct icmp *icmp) {													//icmp_추가
-	struct ih_idseq *ih_idseq;														//icmp_추가
+void log_icmp(struct icmp *icmp,struct ih_idseq *ih_idseq){		
 	fprintf(log_file, "===== ICMP =====\n");										//icmp_추가	
 	fprintf(log_file, "-Type : %d \n", (unsigned int)icmp->icmp_type);				//icmp_추가
 	fprintf(log_file, "-Code : %d \n", (unsigned int)icmp->icmp_code);				//icmp_추가
-	fprintf(log_file, "-Checksum : %x \n", (unsigned int)icmp->icmp_cksum);			//icmp_추가
-	fprintf(log_file, "-Identifier : %d \n", (unsigned int)ih_idseq->icd_id);		//icmp_추가
-	fprintf(log_file, "-Sequence number : %d \n", (unsigned int)ih_idseq->icd_seq);//icmp_추가
-}																					//icmp_추가
-					
+	fprintf(log_file, "-Checksum : Ox%.4x\n", (unsigned int)icmp->icmp_cksum); //icmp_수정
+	fprintf(log_file, "-Identifier(LE) : Ox%.4x \n", ih_idseq->icd_id);     //icmp_수정
+	fprintf(log_file, "-Sequence number(LE) : Ox%.4x \n", ih_idseq->icd_seq);//icmp_수정}																					//icmp_추가
+	}	
 
 void log_tcp(struct tcphdr *tcp){
 	fprintf(log_file,"===== TCP =====\n");
@@ -683,6 +682,7 @@ void log_dns(struct dns_header *dns, struct dns_question *que, struct dns_resour
 	fprintf(log_file, "Answer RRs : %d \n", dns->ancount / 256);      //dns_추가
 	fprintf(log_file, "Authority RRs : %d \n", dns->nscount / 256);   //dns_추가
 	fprintf(log_file, "Additional RRs : %d \n", dns->arcount / 256);  //dns_추가
+	//fprintf(log_file, "Queries : %d : type : %d, class : %d \n",que->name, que->type, que->class); //dns_추가
 	//fprintf(log_file, "Queries : %d : type : %d, class : %d \n",que->name, que->type, que->class); //dns_추가
 	if ((int)que->name == 1986096645) { //dns_수정
 		fprintf(log_file, "Queries name : www.naver.com \n"); //dns_수정
