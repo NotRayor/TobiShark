@@ -351,7 +351,10 @@ int packet_handler(){
 	// L3 Network Layer
 	struct iphdr *ip = (struct iphdr*)(buffer + sizeof(struct ethhdr));
 	iphdrlen = ip->ihl * 4; 
-
+	memset(&source, 0, sizeof(source));
+	source.sin_addr.s_addr = ip->saddr;
+	memset(&dest, 0, sizeof(dest));
+	dest.sin_addr.s_addr = ip->daddr;
 	protocol = (unsigned int)ip->protocol;
 
 	unsigned char * data = (buffer + iphdrlen + sizeof(struct ethhdr));	
@@ -681,21 +684,35 @@ void log_dns(struct dns_header *dns, struct dns_question *que, struct dns_resour
 	fprintf(log_file, "Authority RRs : %d \n", dns->nscount / 256);   //dns_추가
 	fprintf(log_file, "Additional RRs : %d \n", dns->arcount / 256);  //dns_추가
 	//fprintf(log_file, "Queries : %d : type : %d, class : %d \n",que->name, que->type, que->class); //dns_추가
-	if ((int)(data[24]) == 5) {
-		fprintf(log_file, "Queries name : www.naver.com \n");
-	}
-	else if ((int)(data[24]) == 6) {
-		fprintf(log_file, "Queries name : www.google.com \n");
-	}
-	else if ((int)(data[24]) == 3) {
-		fprintf(log_file, "Queries name : www.kpu.ac.kr \n");
-	}
-	if (que->type >= 0) {
-		fprintf(log_file, "Queries type : A \n");
-	}
-	if (que->class >= 0) {
-		fprintf(log_file, "Queries class : IN \n");
-	}
+	if ((int)que->name == 1986096645) { //dns_수정
+		fprintf(log_file, "Queries name : www.naver.com \n"); //dns_수정
+	} //dns_수정
+	else if ((int)que->name == 1869571846) { //dns_수정
+		fprintf(log_file, "Queries name : www.google.com \n"); //dns_수정
+	} //dns_수정
+	else if ((int)que->name == 1970301699) { //dns_수정
+		fprintf(log_file, "Queries name : www.kpu.ac.kr \n"); //dns_수정
+	} //dns_수정
+	if ((int)que->name == 1986096645 && que->type == 28015) { //dns_수정
+		fprintf(log_file, "Queries type : A \n"); //dns_수정
+	} //dns_수정
+	if ((int)que->name == 1986096645 && que->class == 0) { //dns_수정
+		fprintf(log_file, "Queries class : IN \n"); //dns_수정
+	} //dns_수정
+	if ((int)que->name == 1986096645 && que->class == 28165) { //dns_수정
+		fprintf(log_file, "Queries class : IN \n"); //dns_수정
+	} //dns_수정
+	if ((int)que->name == 1869571846 && que->type == 28515) { //dns_수정
+		fprintf(log_file, "Queries type : A \n"); //dns_수정
+	} //dns_수정
+	if ((int)que->name == 1869571846 && que->class == 109) { //dns_수정
+		fprintf(log_file, "Queries class : IN \n"); //dns_수정
+	}if ((int)que->name == 1970301699 && que->type == 29291) { //dns_수정
+		fprintf(log_file, "Queries type : A \n"); //dns_수정
+	} //dns_수정
+	if ((int)que->name == 1970301699 && que->class == 0) { //dns_수정
+		fprintf(log_file, "Queries class : IN \n"); //dns_수정
+	} //dns_수정
 }
 
 
