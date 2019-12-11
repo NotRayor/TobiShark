@@ -75,6 +75,7 @@ void log_udp(struct udphdr *udp);
 void log_dns(struct dns_header *dns, struct dns_question *que, struct dns_resource_record *res, struct dns_handle *han); 
 
 void log_data(unsigned char *data, int remaining_data, int protocol);
+void log_data_char(unsigned char *data, int remaining_data, int protocol);
 
 // 문자열 관련 함수
 void print_eth(struct ethhdr *eth);
@@ -154,6 +155,11 @@ void packetSelect(){
 	scanf(" %d", &input);
 	getchar();
 	// 100: 선택된 파일의 ip필터 적용
+	if(input > packet_num || input < 0){
+		printf("잘못된 입력 \n");
+		return;
+	}
+
 	file_read(input);
 }
 
@@ -167,6 +173,7 @@ int main(int argc, char *argv[])
 		print_menu();
 		printf("\ninput : ");
 		scanf("%d", &input);
+		int count = 0;
 	
 		switch(input){
 			case 1:
@@ -398,7 +405,7 @@ int packet_handler(){
 	if(DNS == source_port || DNS == dest_port)
 		strcpy(protocol_name,"DNS");
 	// 이미지 http 거부 
-	else if((HTTP == source_port || HTTP == dest_port) && (buflen > 80 && buflen < 1000)){
+	else if((HTTP == source_port || HTTP == dest_port) && (buflen > 80 && buflen < 2000)){
 		strcpy(protocol_name,"HTTP");
 	}else if(443 == source_port || 443 == dest_port){
 		strcpy(protocol_name,"https-tls");
@@ -408,8 +415,8 @@ int packet_handler(){
 	if(strcmp(protocol_name,"HTTP")==0) {	
 		hh = (struct http_header*)(buffer + sizeof(struct ethhdr) + iphdrlen + sizeof(struct tcphdr));
 		int http_size = remaining_data;
-		data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr) + sizeof(struct http_header));	
-		remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr) +sizeof(struct http_header) );
+		//data = (buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr) + sizeof(struct http_header));	
+		//remaining_data = buflen - (iphdrlen + sizeof(struct ethhdr) + sizeof(struct udphdr) +sizeof(struct http_header) );
 	}
 
 	//packet_handler 변경 점	
@@ -465,12 +472,14 @@ int packet_handler(){
 	if(strcmp(protocol_name,"HTTP")==0){
 		fprintf(log_file,"=====HTTP===== \n");
 		fprintf(log_file,"%s \n", hh->http_first);
+		protocol = HTTP;
 	}
-	else{
-		if(strcmp(protocol_name,"https-tls")==0)
-			protocol = 443;
-		log_data(data, remaining_data, protocol);
-	}
+
+	if(strcmp(protocol_name,"https-tls")==0)
+		protocol = 443;
+	log_data(data, remaining_data, protocol);
+	log_data_char(data, remaining_data, protocol);
+	
 	fclose(log_file);
 	get_logdir();
 
@@ -484,6 +493,7 @@ int packet_handler(){
 		printf("Length :%d \n", buflen);
 		printf("http 출력 : %s \n", hh->http_first);
 	}
+
 	packet_num++;
 	max_file = packet_num;
 
@@ -505,6 +515,7 @@ int packet_analyze(char *filters){
 	// NULL 로 변경, 얜 전체 다 매핑 시키는 용도로 쓸 꺼다. 
 	if((count = scandir(path, &namelist, NULL, alphasort)) == -1){
 		fprintf(stderr, "%s direntory scan error\n", path);
+		return -1;
 	}
 
 	// .이나 ..을 계산에서 제외시키기 위함이다.
@@ -547,6 +558,7 @@ int list_view(char *filters){
 
 	if((count = scandir(path, &namelist, file_select, alphasort)) == -1){
 		fprintf(stderr, "%s direntory scan error\n", path);
+		return -1;
 	}
 
 	// .이나 ..을 계산에서 제외시키기 위함이다.
@@ -570,7 +582,7 @@ int list_view(char *filters){
 
 	free(namelist);
 
-	return 0;
+	return count;
 
 }
 
@@ -632,18 +644,15 @@ void log_udp(struct udphdr *udp){
 
 void log_data(unsigned char *data, int remaining_data, int protocol){
 
+	if(protocol == HTTP){
+		return;
+	}
+
 	fprintf(log_file,"===== DATA =====\n");
 	for(int i = 0; i < remaining_data; i++){
 
 		if(i!=0){
-			if(protocol == 443 && ('!' < data[i] && data[i] < 'z')){
-				fprintf(log_file,"%c", data[i]);
-			}
-			else if(protocol == 443){
-				fprintf(log_file,"%c", '.');
-			}
-			else
-				fprintf(log_file, "%.2x ", data[i]);
+			fprintf(log_file, "%.2x ", data[i]);
 		
 			if(i%16 == 0)
 				fprintf(log_file, "\n");
@@ -653,7 +662,26 @@ void log_data(unsigned char *data, int remaining_data, int protocol){
 	fprintf(log_file, "\n");	
 }
 
+void log_data_char(unsigned char *data, int remaining_data, int protocol){
 
+	fprintf(log_file,"===== CHAR DATA =====\n");
+	for(int i = 0; i < remaining_data; i++){
+
+		if(i!=0){
+			if(('!' < data[i] && data[i] < 'z')){
+				fprintf(log_file,"%c", data[i]);
+			}
+			else{
+				fprintf(log_file,"%c", '.');
+			}
+		
+			if(i%16 == 0)
+				fprintf(log_file, "\n");
+		}
+	}
+
+	fprintf(log_file, "\n");	
+}
 void print_eth(struct ethhdr *eth){
 	printf("=====Ethernet Header===== \n");
 
